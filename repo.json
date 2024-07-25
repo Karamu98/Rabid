@@ -7,6 +7,7 @@
     "Tags": [ "Rabid" ],
     "InternalName": "Rabid",
     "AssemblyVersion": "0.0.0.1",
+    "TestingAssemblyVersion": "0.0.0.1",
     "RepoUrl": "https://github.com/Karamu98/Rabid",
     "ApplicableVersion": "any",
     "DalamudApiLevel": 9,
