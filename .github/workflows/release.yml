@@ -2,8 +2,7 @@ name: Create Release
 
 on:
   push:
-    tags-ignore:
-      - testing_*
+    branches: [ master ]
 
 jobs:
   build:
