@@ -35,6 +35,7 @@ public sealed class Plugin : IDalamudPlugin
         WindowSystem.AddWindow(ConfigWindow);
         WindowSystem.AddWindow(MainWindow);
 
+
         CommandManager.AddHandler(CommandName, new CommandInfo(OnMainCommand)
         {
             HelpMessage = "Do it."
