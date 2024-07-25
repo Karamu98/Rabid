@@ -10,4 +10,14 @@
     <IsPackable>false</IsPackable>
     <TargetFramework>net8.0-windows8.0</TargetFramework>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="RabidPlugin.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="RabidPlugin.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
 </Project>
