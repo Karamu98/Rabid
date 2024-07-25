@@ -1,0 +1,10 @@
+{
+  "Author": "K'maru",
+  "Name": "Rabid Plugin",
+  "Punchline": "Rabids inside your code.",
+  "Description": "/rabid and /rabidsys are your best friends ",
+  "ApplicableVersion": "any",
+    "Tags": [
+        "Rabid",
+    ]
+}
