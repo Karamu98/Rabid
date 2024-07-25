@@ -1,10 +1,13 @@
 {
-  "Author": "K'maru",
+  "Author": "Karamu",
   "Name": "Rabid Plugin",
   "Punchline": "Rabids inside your code.",
   "Description": "/rabid and /rabidsys are your best friends ",
+  "Tags": [ "Rabid" ],  
+  "InternalName": "RabidPlugin",
+  "AssemblyVersion": "9.0.0.1",
+  "RepoUrl": "https://github.com/Karamu98/Rabid",
   "ApplicableVersion": "any",
-    "Tags": [
-        "Rabid"
-    ]
+  "DalamudApiLevel": 10,
+  "ImageUrls": null
 }

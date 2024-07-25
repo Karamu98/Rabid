@@ -1,0 +1,20 @@
+[
+  {
+    "Author": "Karamu",
+    "Name": "Rabid Plugin",
+    "Punchline": "Rabids inside your code.",
+    "Description": "/rabid and /rabidsys are your best friends ",
+    "Tags": [ "Rabid" ],
+    "InternalName": "Rabid",
+    "AssemblyVersion": "0.0.0.1",
+    "RepoUrl": "https://github.com/Karamu98/Rabid",
+    "ApplicableVersion": "any",
+    "DalamudApiLevel": 9,
+    "TestingDalamudApiLevel": 10,
+    "IsHide": "False",
+    "IsTestingExclusive": "False",
+    "DownloadCount": 1,
+    "DownloadLinkInstall": "https://github.com/Karamu98/Rabid/releases/download/0.0.0.1/RabidPlugin.zip",
+    "DownloadLinkUpdate": "https://github.com/Karamu98/Rabid/releases/download/0.0.0.1/RabidPlugin.zip"
+  }
+]
