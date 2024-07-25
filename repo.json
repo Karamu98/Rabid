@@ -16,6 +16,7 @@
     "IsTestingExclusive": "False",
     "DownloadCount": 1,
     "DownloadLinkInstall": "https://github.com/Karamu98/Rabid/releases/download/0.0.0.1/RabidPlugin.zip",
-    "DownloadLinkUpdate": "https://github.com/Karamu98/Rabid/releases/download/0.0.0.1/RabidPlugin.zip"
+    "DownloadLinkUpdate": "https://github.com/Karamu98/Rabid/releases/download/0.0.0.1/RabidPlugin.zip",
+    "DownloadLinkTesting": "https://github.com/Karamu98/Rabid/releases/download/0.0.0.1/RabidPlugin.zip"
   }
 ]
