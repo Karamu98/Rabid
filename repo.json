@@ -8,8 +8,8 @@
       "Rabid"
     ],
     "InternalName": "RabidPlugin",
-    "AssemblyVersion": "0.0.4",
-    "TestingAssemblyVersion": "0.0.4",
+    "AssemblyVersion": "0.0.6",
+    "TestingAssemblyVersion": "0.0.6",
     "RepoUrl": "https://github.com/Karamu98/Rabid",
     "ApplicableVersion": "any",
     "DalamudApiLevel": 10,
@@ -18,8 +18,8 @@
     "IsTestingExclusive": "False",
     "DownloadCount": 1,
     "LastUpdate": 1618608322,
-    "DownloadLinkInstall": "https://github.com/Karamu98/Rabid/releases/download/0.0.4/RabidPlugin.zip",
-    "DownloadLinkUpdate": "https://github.com/Karamu98/Rabid/releases/download/0.0.4/RabidPlugin.zip",
-    "DownloadLinkTesting": "https://github.com/Karamu98/Rabid/releases/download/0.0.4/RabidPlugin.zip"
+    "DownloadLinkInstall": "https://github.com/Karamu98/Rabid/releases/download/0.0.6/RabidPlugin.zip",
+    "DownloadLinkUpdate": "https://github.com/Karamu98/Rabid/releases/download/0.0.6/RabidPlugin.zip",
+    "DownloadLinkTesting": "https://github.com/Karamu98/Rabid/releases/download/0.0.6/RabidPlugin.zip"
   }
 ]
