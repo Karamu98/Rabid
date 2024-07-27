@@ -7,6 +7,8 @@ using RabidPlugin.Windows;
 using FFXIVClientStructs.FFXIV.Client.System.Framework;
 using System.Threading;
 using DrahsidLib;
+using Dalamud.Game.Config;
+using Dalamud.Game.ClientState.Conditions;
 
 namespace RabidPlugin;
 
@@ -27,6 +29,7 @@ public sealed class Plugin : IDalamudPlugin
 
     public Plugin()
     {
+        PluginInterface.Create<Service>();
         Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
 
         ConfigWindow = new ConfigWindow(this);
@@ -78,17 +81,16 @@ public sealed class Plugin : IDalamudPlugin
 
     private void DoTPOffset()
     {
-        if(!Configuration.ThirdPersonOffset)
+        float converted = Configuration.ThirdPersonCombatOffset / 100f * (0.21f - (-0.08f)) + (-0.08f);
+        
+        if(!Configuration.AlwaysCombatOffset)
         {
-            return;
+            if (!Service.Condition[ConditionFlag.InCombat])
+            {
+                converted = Configuration.ThirdPersonNoCombatOffset / 100f * (0.21f - (-0.08f)) + (-0.08f);
+            }
         }
-
-        unsafe
-        {
-            GameCamera* active = GameCameraManager.Instance()->Camera;
-            //active->Pitch = Configuration.ThirdPersonNoCombatOffset.X;
-            //active->Yaw = Configuration.ThirdPersonNoCombatOffset.Y;
-        }
+        Service.GameConfig.Set(UiControlOption.TiltOffset, converted);
     }
 
     private void DoFPFOVAdjustments()

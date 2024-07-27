@@ -31,11 +31,13 @@ public class ConfigWindow : Window, IDisposable
         {
             ImGui.Checkbox("Enabled", ref Configuration.FirstPersonFOVAdjuster);
             ImGui.DragFloat("First person FOV Adjustment", ref Configuration.CameraFOV, 0.01f, 0.0f, 1.0f);
+            ImGui.Unindent();
         }
-        //if(ImGui.TreeNode("Third person camera offset (non-combat)"))
-        //{
-        //    ImGui.Checkbox("Enabled", ref Configuration.ThirdPersonOffset);
-        //    ImGui.DragFloat2("Offset", ref Configuration.ThirdPersonNoCombatOffset);
-        //}
+        if (ImGui.TreeNode("Third person camera offset (non-combat)"))
+        {
+            ImGui.Checkbox("Always combat offset", ref Configuration.AlwaysCombatOffset);
+            ImGui.DragFloat("No Combat Offset", ref Configuration.ThirdPersonNoCombatOffset, 1.0f, 0.0f, 100.0f);
+            ImGui.DragFloat("Combat Offset", ref Configuration.ThirdPersonCombatOffset, 1.0f, 0.0f, 100.0f);
+        }
     }
 }

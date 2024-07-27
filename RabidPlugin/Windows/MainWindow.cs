@@ -8,6 +8,9 @@ using FFXIVClientStructs.FFXIV.Client.Game.Control;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using ImGuiNET;
 using DrahsidLib;
+using Dalamud.Game.Config;
+using FFXIVClientStructs.FFXIV.Common.Lua;
+using Dalamud.Plugin.Services;
 
 namespace RabidPlugin.Windows;
 
@@ -28,12 +31,11 @@ public class MainWindow : Window, IDisposable
 
         Plugin = plugin;
     }
-
     public void Dispose() { }
 
     public override void Draw()
     {
-        if(ImGui.BeginChild("RabidMain"))
+        if (ImGui.BeginChild("RabidMain"))
         {
             if (ImGui.TreeNode("Debug"))
             {
