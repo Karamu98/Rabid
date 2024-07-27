@@ -15,11 +15,10 @@ public class ConfigWindow : Window, IDisposable
     // and the window ID will always be "###XYZ counter window" for ImGui
     public ConfigWindow(Plugin plugin) : base("RABID CONFIG AYAYAYA###With a constant ID")
     {
-        Flags = ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollbar |
-                ImGuiWindowFlags.NoScrollWithMouse;
+        Flags = ImGuiWindowFlags.AlwaysAutoResize;
 
         Size = new Vector2(550, 70);
-        SizeCondition = ImGuiCond.Always;
+        SizeCondition = ImGuiCond.FirstUseEver;
 
         Configuration = plugin.Configuration;
     }
@@ -28,6 +27,15 @@ public class ConfigWindow : Window, IDisposable
 
     public override void Draw()
     {
-        ImGui.DragFloat("First person FOV Adjustment", ref Configuration.CameraFOV, 0.01f, 0.0f, 1.0f);
+        if(ImGui.TreeNode("First person FOV adjustment"))
+        {
+            ImGui.Checkbox("Enabled", ref Configuration.FirstPersonFOVAdjuster);
+            ImGui.DragFloat("First person FOV Adjustment", ref Configuration.CameraFOV, 0.01f, 0.0f, 1.0f);
+        }
+        //if(ImGui.TreeNode("Third person camera offset (non-combat)"))
+        //{
+        //    ImGui.Checkbox("Enabled", ref Configuration.ThirdPersonOffset);
+        //    ImGui.DragFloat2("Offset", ref Configuration.ThirdPersonNoCombatOffset);
+        //}
     }
 }

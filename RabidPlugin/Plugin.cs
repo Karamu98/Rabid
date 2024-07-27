@@ -72,6 +72,32 @@ public sealed class Plugin : IDalamudPlugin
     private void DrawUI()
     {
         WindowSystem.Draw();
+        DoFPFOVAdjustments();
+        DoTPOffset();
+    }
+
+    private void DoTPOffset()
+    {
+        if(!Configuration.ThirdPersonOffset)
+        {
+            return;
+        }
+
+        unsafe
+        {
+            GameCamera* active = GameCameraManager.Instance()->Camera;
+            //active->Pitch = Configuration.ThirdPersonNoCombatOffset.X;
+            //active->Yaw = Configuration.ThirdPersonNoCombatOffset.Y;
+        }
+    }
+
+    private void DoFPFOVAdjustments()
+    {
+        if(!Configuration.FirstPersonFOVAdjuster)
+        {
+            return;
+        }
+
         unsafe
         {
             GameCamera* active = GameCameraManager.Instance()->Camera;

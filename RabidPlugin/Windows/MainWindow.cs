@@ -19,11 +19,10 @@ public class MainWindow : Window, IDisposable
     // So that the user will see "My Amazing Window" as window title,
     // but for ImGui the ID is "My Amazing Window##With a hidden ID"
     public MainWindow(Plugin plugin)
-        : base("BARK BARK BARK##With a hidden ID", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
+        : base("Rabid##With a hidden ID", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
     {
         SizeConstraints = new WindowSizeConstraints
         {
-            MinimumSize = new Vector2(375, 330),
             MaximumSize = new Vector2(float.MaxValue, float.MaxValue)
         };
 
@@ -32,20 +31,111 @@ public class MainWindow : Window, IDisposable
 
     public void Dispose() { }
 
-    static string[] ModeStrings = { "FirstPerson", "ThirdPerson"};
     public override void Draw()
     {
-        ImGui.Text("idk what the fuck to put in here");
-
-        unsafe
+        if(ImGui.BeginChild("RabidMain"))
         {
-            GameCamera* active = GameCameraManager.Instance()->Camera;
-            int currentMode = active->Mode;
+            if (ImGui.TreeNode("Debug"))
+            {
+                if (ImGui.TreeNode("Camera"))
+                {
+                    unsafe
+                    {
+                        GameCameraManager* man = GameCameraManager.Instance();
+                        ImGui.Text($"Active camera index: {man->ActiveCameraIndex}");
+                        ImGui.Text($"Previous camera index: {man->PreviousCameraIndex}");
+                        if (ImGui.TreeNode("Active Camera"))
+                        {
+                            GameCamera* active = null;
+                            switch (man->ActiveCameraIndex)
+                            {
+                                case 0: { active = man->Camera; break; }
+                                case 2: { active = &man->LobbCamera->Camera; break; }
+                                case 3: { active = &man->Camera3->Camera; break; }
+                            }
+                            
+                            if(active != null)
+                            {
+                                PrintGameCamera(active);
+                            }
+                            else
+                            {
+                                ImGui.Text("Active camera Null...");
+                            }
+                        }
+                        if (ImGui.TreeNode("Other Cameras"))
+                        {
+                            if (ImGui.TreeNode("World Camera (0)"))
+                            {
+                                PrintGameCamera(man->Camera);
+                            }
+                            if (ImGui.TreeNode("Lobby Camera (2)"))
+                            {
+                                PrintGameCamera(&man->LobbCamera->Camera);
+                            }
+                            if (ImGui.TreeNode("Spectator Camera (3)"))
+                            {
+                                PrintGameCamera(&man->Camera3->Camera);
+                            }
+                        }
 
-            ImGui.Text($"Current Mode: {ModeStrings[currentMode]}");
-            ImGui.Text($"FOV: {active->FoV}");
-            ImGui.Text($"Added FOV: {active->AddedFoV}");
+                    }
+                }
+            }
+
+            ImGui.EndChild();
         }
-        return;
+    }
+
+    static string[] ModeStrings = { "FirstPerson", "ThirdPerson" };
+    static string[] ControlTypeStrings = { "FirstPerson", "Legacy", "Standard" };
+    private unsafe void PrintGameCamera(GameCamera* targetCam)
+    {
+        ImGui.Indent();
+        ImGui.Text("Position");
+        ImGui.Indent();
+        ImGui.Text($"X: {targetCam->CameraBase.X:0.000} Y: {targetCam->CameraBase.Y:0.000}, Z: {targetCam->CameraBase.Z:0.000}");
+        ImGui.Unindent();
+        ImGui.Text("Look at position");
+        ImGui.Indent();
+        ImGui.Text($"X: {targetCam->CameraBase.LookAtX:0.000} Y: {targetCam->CameraBase.LookAtY:0.000}, Z: {targetCam->CameraBase.LookAtZ:0.000}");
+        ImGui.Unindent();
+
+        ImGui.DragFloat("Distance", ref targetCam->Distance, 0.01f, 1.5f, 20.0f);
+        ImGui.Text($"Min/Max Distance: {targetCam->MinDistance}/{targetCam->MaxDistance}");
+
+        ImGui.Text($"FOV: {targetCam->FoV}");
+        ImGui.Text($"Min/Max FOV: {targetCam->MinFoV}/{targetCam->MaxFoV}");
+        ImGui.Text($"Added FOV: {targetCam->AddedFoV}");
+
+        ImGui.DragFloat("Yaw", ref targetCam->Yaw, 0.01f);
+        ImGui.Indent();
+        ImGui.Text($"Yaw Delta {targetCam->YawDelta}");
+        ImGui.Unindent();
+        ImGui.DragFloat("Pitch", ref targetCam->Pitch, 0.01f);
+        ImGui.Indent();
+        ImGui.Text($"Min/Max Pitch: {targetCam->MinPitch}/{targetCam->MaxPitch}");
+        ImGui.Unindent();
+        ImGui.DragFloat("Roll", ref targetCam->Roll, 0.01f);
+
+        int currentmode = targetCam->Mode;
+        ImGui.Text($"Camera control mode: {ModeStrings[currentmode]}");
+
+        int currentControlType = targetCam->ControlType;
+        ImGui.Text($"Control Type: {ControlTypeStrings[currentControlType]}");
+
+        ImGui.DragFloat("FP/TP Interpolate Distance", ref targetCam->InterpDistance, 0.01f);
+        ImGui.Text($"Save distance: {targetCam->SavedDistance}");
+        ImGui.Text($"Transition: {targetCam->Transition}");
+
+        ImGui.Text($"Is Flipped: {targetCam->IsFlipped}");
+
+        if(ImGui.TreeNode("GPose only pan </3"))
+        {
+            GPoseCamera* newCam = (GPoseCamera*)targetCam;
+            ImGui.DragFloat("Pan X", ref newCam->Pan.X, 0.001f);
+            ImGui.DragFloat("Pan Y", ref newCam->Pan.Y, 0.001f);
+        }
+        ImGui.Unindent();
     }
 }
