@@ -13,6 +13,7 @@ public class Configuration : IPluginConfiguration
     public bool FirstPersonFOVAdjuster = true;
     public float CameraFOV = 0.4f;
 
+    public bool TPOffsetEnabled = false;
     public bool AlwaysCombatOffset = false;
     public float ThirdPersonNoCombatOffset = 30.0f;
     public float ThirdPersonCombatOffset = 0.0f;

@@ -81,6 +81,11 @@ public sealed class Plugin : IDalamudPlugin
 
     private void DoTPOffset()
     {
+        if(!Configuration.TPOffsetEnabled)
+        {
+            return;
+        }
+
         float converted = Configuration.ThirdPersonCombatOffset / 100f * (0.21f - (-0.08f)) + (-0.08f);
         
         if(!Configuration.AlwaysCombatOffset)

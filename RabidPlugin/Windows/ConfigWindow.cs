@@ -35,9 +35,12 @@ public class ConfigWindow : Window, IDisposable
         }
         if (ImGui.TreeNode("Third person camera offset (non-combat)"))
         {
+            ImGui.Checkbox("Enabled", ref Configuration.TPOffsetEnabled);
+            ImGui.BeginDisabled(!Configuration.TPOffsetEnabled);
             ImGui.Checkbox("Always combat offset", ref Configuration.AlwaysCombatOffset);
             ImGui.DragFloat("No Combat Offset", ref Configuration.ThirdPersonNoCombatOffset, 1.0f, 0.0f, 100.0f);
             ImGui.DragFloat("Combat Offset", ref Configuration.ThirdPersonCombatOffset, 1.0f, 0.0f, 100.0f);
+            ImGui.EndDisabled();
         }
     }
 }
