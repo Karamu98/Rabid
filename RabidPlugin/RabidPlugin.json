@@ -8,6 +8,6 @@
   "AssemblyVersion": "9.0.0.1",
   "RepoUrl": "https://github.com/Karamu98/Rabid",
   "ApplicableVersion": "any",
-  "DalamudApiLevel": 10,
+  "DalamudApiLevel": 11,
   "ImageUrls": null
 }

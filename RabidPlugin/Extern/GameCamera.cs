@@ -3,12 +3,13 @@ using FFXIVClientStructs.FFXIV.Client.Game.Control;
 using FFXIVClientStructs.FFXIV.Common.Math;
 using System.Runtime.InteropServices;
 
-namespace DrahsidLib;
+namespace RabidPlugin.Extern;
 
 /// <summary>
 /// Enumeration representing the value which dictates the mode the camera is in.
 /// </summary>
-public enum CameraControlMode {
+public enum CameraControlMode
+{
     FirstPerson = 0,
     ThirdPerson = 1
 }
@@ -16,7 +17,8 @@ public enum CameraControlMode {
 /// <summary>
 /// Enumeration representing the currently active control type. There are more possible values than these, I just don't know what they do.
 /// </summary>
-public enum CameraControlType {
+public enum CameraControlType
+{
     FirstPerson = 0,
     Legacy = 1,
     Standard = 2
@@ -25,7 +27,8 @@ public enum CameraControlType {
 /// <summary>
 /// Enumeration representing the selected movement mode within the game's config
 /// </summary>
-public enum MovementMode {
+public enum MovementMode
+{
     Standard = 0,
     Legacy = 1,
     Count
@@ -35,7 +38,8 @@ public enum MovementMode {
 /// FFXIVClientStructs.FFXIV.Client.Game.CameraBase with some additional fields
 /// </summary>
 [StructLayout(LayoutKind.Explicit, Size = 0x110)]
-public unsafe struct GameCameraBase {
+public unsafe struct GameCameraBase
+{
     [FieldOffset(0x00)] public void** vtbl;
     [FieldOffset(0x10)] public FFXIVClientStructs.FFXIV.Client.Graphics.Scene.Camera SceneCamera;
     [FieldOffset(0x60)] public float X;
@@ -52,7 +56,8 @@ public unsafe struct GameCameraBase {
 /// FFXIVClientStructs.FFXIV.Client.Game.Camera with some additional fields
 /// </summary>
 [StructLayout(LayoutKind.Explicit)]
-public unsafe struct GameCamera {
+public unsafe struct GameCamera
+{
     [FieldOffset(0x00)] public GameCameraBase CameraBase;
     [FieldOffset(0x114)] public float Distance; // "CurrentZoom"
     [FieldOffset(0x118)] public float MinDistance; // "MinZoom"
@@ -107,7 +112,8 @@ public struct GPoseCamera
 /// FFXIVClientStructs.FFXIV.Client.Game.LobbyCamera with some additional fields
 /// </summary>
 [StructLayout(LayoutKind.Explicit, Size = 0x300)]
-public unsafe struct GameLobbyCamera {
+public unsafe struct GameLobbyCamera
+{
     [FieldOffset(0x00)] public GameCamera Camera;
     [FieldOffset(0x2F8)] public void* LobbyExcelSheet;
 }
@@ -116,7 +122,8 @@ public unsafe struct GameLobbyCamera {
 /// FFXIVClientStructs.FFXIV.Client.Game.Camera3 with some additional fields
 /// </summary>
 [StructLayout(LayoutKind.Explicit, Size = 0x300)]
-public struct GameCamera3 {
+public struct GameCamera3
+{
     [FieldOffset(0x00)] public GameCamera Camera;
 }
 
@@ -124,7 +131,8 @@ public struct GameCamera3 {
 /// FFXIVClientStructs.FFXIV.Client.Game.LowCutCamera with some additional fields
 /// </summary>
 [StructLayout(LayoutKind.Explicit, Size = 0x2E0)]
-public struct GameLowCutCamera {
+public struct GameLowCutCamera
+{
     [FieldOffset(0x00)] public GameCameraBase CameraBase;
 }
 
@@ -132,7 +140,8 @@ public struct GameLowCutCamera {
 /// FFXIVClientStructs.FFXIV.Client.Game.Camera4 with some additional fields
 /// </summary>
 [StructLayout(LayoutKind.Explicit, Size = 0x350)]
-public struct GameCamera4 {
+public struct GameCamera4
+{
     [FieldOffset(0x00)] public GameCameraBase CameraBase;
 
     [FieldOffset(0x110)] public FFXIVClientStructs.FFXIV.Client.Graphics.Scene.Camera SceneCamera0;
@@ -143,7 +152,8 @@ public struct GameCamera4 {
 /// FFXIVClientStructs.FFXIV.Client.Game.Control.GameCameraManager with some additional fields
 /// </summary>
 [StructLayout(LayoutKind.Explicit, Size = 0x180)]
-public unsafe partial struct GameCameraManager {
+public unsafe partial struct GameCameraManager
+{
     public static GameCameraManager* Instance() => (GameCameraManager*)Control.Instance();
 
     [FieldOffset(0x00)] public GameCamera* Camera; // "WorldCamera"
