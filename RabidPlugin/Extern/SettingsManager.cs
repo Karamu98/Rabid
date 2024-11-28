@@ -1,12 +1,10 @@
 ﻿using Dalamud.Memory;
 using FFXIVClientStructs.FFXIV.Client.System.Framework;
 using FFXIVClientStructs.FFXIV.Common.Configuration;
-using FFXIVClientStructs.FFXIV.Common.Lua;
 using System;
 using ImGuiNET;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
 
 namespace RabidPlugin
 {
@@ -14,6 +12,7 @@ namespace RabidPlugin
     public unsafe class SettingsManager
     {
         public readonly static string[] ConfigIDToName = ["Base", "UI", "UI Control", "UI Gamepad"];
+        private readonly static bool C_AllowStringEdits = false;
         #region Types
 
         public unsafe class ConfigSettingSource(uint entryIndex, ConfigValue val, ConfigType type)
@@ -21,6 +20,7 @@ namespace RabidPlugin
             public uint EntryIndex { get; private set; } = entryIndex;
             public ConfigValue Value { get; private set; } = val;
             public ConfigType ValueType { get; private set; } = type;
+
 
             public void SetValue(ConfigValue newVal)
             {
@@ -55,8 +55,13 @@ namespace RabidPlugin
                         }
                     case ConfigType.String:
                         {
+                            ImGui.BeginDisabled(C_AllowStringEdits);
                             string current = Helpers.ConvertBytePointerToString(Value.String->StringPtr);
-                            ImGui.Text($"{label}: {current}");
+                            if(ImGui.InputText(label, ref current, (uint)current.Length))
+                            {
+                                Value.String->SetString(current);
+                            }
+                            ImGui.EndDisabled();
                             break;
                         }
                     case ConfigType.Category:
@@ -86,7 +91,7 @@ namespace RabidPlugin
                     {
                         case ConfigType.UInt: target->SetValueUInt(fullSetting.Value.Value.UInt); break;
                         case ConfigType.Float: target->SetValueFloat(fullSetting.Value.Value.Float); break;
-                        case ConfigType.String: target->SetValueString(fullSetting.Value.Value.String); break;
+                        case ConfigType.String: if (C_AllowStringEdits) { target->SetValueString(fullSetting.Value.Value.String); } break;
                     }
                 }
 
@@ -125,22 +130,10 @@ namespace RabidPlugin
         }
         #endregion
 
-        public SettingsManager(Configuration configuration)
-        {
-            m_Configuration = configuration;
-
-            m_ConfigBase[0] = &(m_FrameworkInstance->SystemConfig.SystemConfigBase.ConfigBase);
-            m_ConfigBase[1] = &(m_FrameworkInstance->SystemConfig.SystemConfigBase.UiConfig);
-            m_ConfigBase[2] = &(m_FrameworkInstance->SystemConfig.SystemConfigBase.UiControlConfig);
-            m_ConfigBase[3] = &(m_FrameworkInstance->SystemConfig.SystemConfigBase.UiControlGamepadConfig);
-
-            ClearList();
-            m_HotProfiles.Load(m_Configuration.SettingsProfiles);
-        }
-
+        #region ImGui
         public void DrawEditor()
         {
-            if(ImGui.BeginChild("Settings Manager"))
+            if (ImGui.BeginChild("Settings Manager"))
             {
                 DrawHeader();
                 ImGui.Separator();
@@ -148,6 +141,46 @@ namespace RabidPlugin
 
                 ImGui.EndChild();
             }
+        }
+
+        public void DrawDebug()
+        {
+            Helpers.CollapsingTreeNode("Mapped Settings", new Helpers.TreeFrame(), (col) =>
+            {
+                // TODO: Improve, maybe cache list with this prior instead
+                bool treeNeedsPop = false;
+                bool treeIsOpen = false;
+                foreach (var setting in m_MappedSettings)
+                {
+                    if(setting.Key.StartsWith('<') && setting.Key.EndsWith('>'))
+                    {
+                        if(treeIsOpen && treeNeedsPop)
+                        {
+                            ImGui.TreePop();
+                        }
+                        treeIsOpen = ImGui.TreeNode(setting.Key);
+                        treeNeedsPop = true;
+                    }
+                    else
+                    {
+                        if(!treeIsOpen)
+                        {
+                            continue;
+                        }
+
+                        Helpers.CollapsingTreeNode(setting.Key, col, (col) =>
+                        {
+                            foreach (var ele in setting.Value)
+                            {
+                                ConfigEntry* loc = &m_ConfigBase[ele.Item1]->ConfigEntry[ele.Item2];
+                                ImGui.Text($"ConfigID: {ele.Item1} - Index: {ele.Item2}");
+                                ImGui.SameLine();
+                                DrawEditGameConfigValue(loc);
+                            }
+                        });
+                    }
+                }
+            });
         }
 
         private void DrawHeader()
@@ -159,6 +192,7 @@ namespace RabidPlugin
                 m_HotProfiles.Add(m_NewProfileName, new NamedSettings());
                 m_NewProfileName = "";
             }
+
             if (!canCreate && ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
             {
                 string reason = "";
@@ -265,31 +299,12 @@ namespace RabidPlugin
                     }
                 }
 
-                //foreach (var profile in m_HotProfiles)
-                //{
-
-                //}
                 ImGui.EndTable();
             }
         }
 
-        public void Dispose()
-        {
-            ClearList();
-        }
-
-        public void ClearList()
-        {
-            m_MappedSettings.Clear();
-            m_SavedSettings.Clear();
-        }
-
-        private bool DrawEditFieldForItem(uint cfgID, uint idx)
-        {
-            return DrawEditConfigValue(&m_ConfigBase[cfgID]->ConfigEntry[idx]);
-        }
-
-        private bool DrawEditConfigValue(ConfigEntry* entry, ConfigValue* valueToEdit = null, bool applyToGame = true)
+        // TODO: Maybe we could remove duplication of type logic here
+        private bool DrawEditGameConfigValue(ConfigEntry* entry, bool applyToGame = true)
         {
             string? name = Marshal.PtrToStringUTF8((nint)entry->Name);
             if (name == null)
@@ -298,66 +313,40 @@ namespace RabidPlugin
             }
 
             name = name == null ? "NULL" : name;
-            string label = $"{name}##SettingsManager_{(int)entry}";
-
-            if (valueToEdit == null)
-            {
-                valueToEdit = &entry->Value;
-            }
-
-            bool applyChangesToGame = valueToEdit == &entry->Value && applyToGame;
+            string label = $"##SettingsManager_{(int)entry}";
 
             switch ((ConfigType)entry->Type)
             {
                 case ConfigType.UInt:
                     {
-                        int curVal = (int)valueToEdit->UInt;
-                        if(ImGui.InputInt(label, ref curVal))
+                        int curVal = (int)entry->Value.UInt;
+                        if (ImGui.InputInt(label, ref curVal))
                         {
-                            if (applyChangesToGame)
-                            {
-                                entry->SetValueUInt((uint)curVal);
-                            }
-                            else
-                            {
-                                valueToEdit->UInt = (uint)curVal;
-                            }
+                            entry->SetValueUInt((uint)curVal);
                             return true;
                         }
                         break;
                     }
                 case ConfigType.Float:
                     {
-                        float current = valueToEdit->Float;
+                        float current = entry->Value.Float;
                         if (ImGui.InputFloat(label, ref current))
                         {
-                            if (applyChangesToGame)
-                            {
-                                entry->SetValueFloat(current);
-                            }
-                            else
-                            {
-                                valueToEdit->Float = current;
-                            }
+                            entry->SetValueFloat(current);
                             return true;
                         }
                         break;
                     }
                 case ConfigType.String:
                     {
-                        string current = Helpers.ConvertBytePointerToString(valueToEdit->String->StringPtr);
-                        if(ImGui.InputText(label, ref current, (uint)current.Length))
+                        ImGui.BeginDisabled(C_AllowStringEdits);
+                        string current = Helpers.ConvertBytePointerToString(entry->Value.String->StringPtr);
+                        if (ImGui.InputText(label, ref current, (uint)current.Length))
                         {
-                            if (applyChangesToGame)
-                            {
-                                entry->SetValueString(current);
-                            }
-                            else
-                            {
-                                valueToEdit->String->SetString(current);
-                            }
+                            entry->SetValueString(current);
                             return true;
                         }
+                        ImGui.EndDisabled();
                         break;
                     }
                 case ConfigType.Category:
@@ -367,6 +356,31 @@ namespace RabidPlugin
                     }
             }
             return false;
+        }
+        #endregion
+
+        public SettingsManager(Configuration configuration)
+        {
+            m_Configuration = configuration;
+
+            m_ConfigBase[0] = &(m_FrameworkInstance->SystemConfig.SystemConfigBase.ConfigBase);
+            m_ConfigBase[1] = &(m_FrameworkInstance->SystemConfig.SystemConfigBase.UiConfig);
+            m_ConfigBase[2] = &(m_FrameworkInstance->SystemConfig.SystemConfigBase.UiControlConfig);
+            m_ConfigBase[3] = &(m_FrameworkInstance->SystemConfig.SystemConfigBase.UiControlGamepadConfig);
+
+            ClearList();
+            m_HotProfiles.Load(m_Configuration.SettingsProfiles);
+        }
+
+        public void Dispose()
+        {
+            ClearList();
+        }
+
+        // TODO: Cleanup new stuff here
+        public void ClearList()
+        {
+            m_MappedSettings.Clear();
         }
 
         public void MapSettings()
@@ -392,113 +406,48 @@ namespace RabidPlugin
             m_HotProfiles.Load(m_Configuration.SettingsProfiles);
         }
 
-        public void SetSettingsValueInt(string setting, uint value)
+        // TODO: Redo
+        public void DOESNOTHING_Save(bool compare = false)
         {
-            List<Tuple<uint, uint>> list = m_MappedSettings.GetValueOrDefault(setting, new List<Tuple<uint, uint>>());
-            foreach (Tuple<uint, uint> item in list)
-            {
-                m_ConfigBase[item.Item1]->ConfigEntry[item.Item2].SetValueUInt(value);
-            }
-        }
+            return;
+            //if (!compare)
+            //{
+            //    m_SavedSettings.Clear();
+            //    for (uint cfgId = 0; cfgId < m_ConfigBase.Length; cfgId++)
+            //    {
+            //        for (uint i = 0; i < m_ConfigBase[cfgId]->ConfigCount; i++)
+            //        {
+            //            if (m_ConfigBase[cfgId]->ConfigEntry[i].Type == 0)
+            //                continue;
 
-        public uint GetSettingsValueInt(string setting, int index)
-        {
-            List<Tuple<uint, uint>> list = m_MappedSettings.GetValueOrDefault(setting, new List<Tuple<uint, uint>>());
-            if (index >= list.Count)
-            {
-                return 0;
-            }
-            return m_ConfigBase[list[index].Item1]->ConfigEntry[list[index].Item2].Value.UInt;
-        }
-
-
-        public void DebugSettings(bool printAll = false)
-        {
-            Save(false);
-
-            foreach (var settingByName in m_SavedSettings)
-            {
-                foreach (var cfgEntry in settingByName.Value)
-                {
-                    string name = settingByName.Key;
-                    uint cfgId = cfgEntry.Key;
-                    uint i = cfgEntry.Value.EntryIndex;
-
-                    if (printAll)
-                    {
-                        string value = GetValueStrFromConfig(&m_ConfigBase[cfgId]->ConfigEntry[i]);
-                        string message = $"Location:   {ConfigIDToName[cfgId]} | {i} name: {name} value: {value}";
-                        RabidPlugin.Log!.Info(message);
-                    }
-                }
-            }
-        }
-
-        public void Save(bool compare = false)
-        {
-            if (!compare)
-            {
-                m_SavedSettings.Clear();
-                for (uint cfgId = 0; cfgId < m_ConfigBase.Length; cfgId++)
-                {
-                    for (uint i = 0; i < m_ConfigBase[cfgId]->ConfigCount; i++)
-                    {
-                        if (m_ConfigBase[cfgId]->ConfigEntry[i].Type == 0)
-                            continue;
-
-                        string name = MemoryHelper.ReadStringNullTerminated(new IntPtr(m_ConfigBase[cfgId]->ConfigEntry[i].Name));
-                        if (!m_SavedSettings.ContainsKey(name))
-                            m_SavedSettings[name] = new ConfigSetting();
-                        ConfigEntry* currentEntry = &m_ConfigBase[cfgId]->ConfigEntry[i];
-                        m_SavedSettings[name][cfgId] = new ConfigSettingSource(i, currentEntry->Value, (ConfigType)currentEntry->Type);
-                    }
-                }
-                RabidPlugin.Log!.Info($"--- Current Settings Saved ---");
-            }
-            else
-            {
-                RabidPlugin.Log!.Info($"--- Changed Settings ---");
-                foreach (var itemByName in m_SavedSettings)
-                    foreach (var cfgEntry in itemByName.Value)
-                        if(cfgEntry.Value.Value.UInt != m_ConfigBase[cfgEntry.Key]->ConfigEntry[cfgEntry.Value.EntryIndex].Value.UInt)
-                            RabidPlugin.Log!.Info($"{cfgEntry.Key} | {cfgEntry.Value.EntryIndex} -- {itemByName.Key} -- {cfgEntry.Value.Value.UInt} {cfgEntry.Value.Value.Float} | {m_ConfigBase[cfgEntry.Key]->ConfigEntry[cfgEntry.Value.EntryIndex].Value.UInt} {m_ConfigBase[cfgEntry.Key]->ConfigEntry[cfgEntry.Value.EntryIndex].Value.Float}");
-            }
-        }
-
-        private string GetValueStrFromConfig(ConfigEntry* entry)
-        {
-            switch ((ConfigType)entry->Type)
-            {
-                case ConfigType.String:
-                    {
-                        return Helpers.ConvertBytePointerToString(entry->Value.String->StringPtr);
-                    }
-                case ConfigType.UInt:
-                    {
-                        return entry->Value.UInt.ToString();
-                    }
-                case ConfigType.Float:
-                {
-                    return entry->Value.Float.ToString();
-                }
-                case ConfigType.Category:
-                    {
-                        return $"_cat_ {entry->Value.UInt.ToString()}";
-                    }
-            }
-
-            return "NULL DEFAULT";
+            //            string name = MemoryHelper.ReadStringNullTerminated(new IntPtr(m_ConfigBase[cfgId]->ConfigEntry[i].Name));
+            //            if (!m_SavedSettings.ContainsKey(name))
+            //                m_SavedSettings[name] = new ConfigSetting();
+            //            ConfigEntry* currentEntry = &m_ConfigBase[cfgId]->ConfigEntry[i];
+            //            m_SavedSettings[name][cfgId] = new ConfigSettingSource(i, currentEntry->Value, (ConfigType)currentEntry->Type);
+            //        }
+            //    }
+            //    RabidPlugin.Log!.Info($"--- Current Settings Saved ---");
+            //}
+            //else
+            //{
+            //    RabidPlugin.Log!.Info($"--- Changed Settings ---");
+            //    foreach (var itemByName in m_SavedSettings)
+            //        foreach (var cfgEntry in itemByName.Value)
+            //            if(cfgEntry.Value.Value.UInt != m_ConfigBase[cfgEntry.Key]->ConfigEntry[cfgEntry.Value.EntryIndex].Value.UInt)
+            //                RabidPlugin.Log!.Info($"{cfgEntry.Key} | {cfgEntry.Value.EntryIndex} -- {itemByName.Key} -- {cfgEntry.Value.Value.UInt} {cfgEntry.Value.Value.Float} | {m_ConfigBase[cfgEntry.Key]->ConfigEntry[cfgEntry.Value.EntryIndex].Value.UInt} {m_ConfigBase[cfgEntry.Key]->ConfigEntry[cfgEntry.Value.EntryIndex].Value.Float}");
+            //}
         }
 
 
         private Framework* m_FrameworkInstance = Framework.Instance();
         private ConfigBase*[] m_ConfigBase = new ConfigBase*[4];
         private Dictionary<string, List<Tuple<uint, uint>>> m_MappedSettings = new Dictionary<string, List<Tuple<uint, uint>>>(); // cfgID, index
+        private Configuration m_Configuration;
 
-        private NamedSettings m_SavedSettings = new NamedSettings();
+        // Editor
         private SettingsProfiles m_HotProfiles = new SettingsProfiles();
         private HashSet<string> m_ProfilesBeingRemoved = new HashSet<string>();
-        private Configuration m_Configuration;
         private string m_NewProfileName = "";
         private string m_SelectedProfile = "";
     }

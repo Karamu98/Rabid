@@ -5,7 +5,6 @@ using Dalamud.Interface.Windowing;
 using Dalamud.Plugin.Services;
 using RabidPlugin.Windows;
 using System;
-using System.Collections.Generic;
 using RabidPlugin.Extern;
 
 namespace RabidPlugin;
@@ -20,13 +19,7 @@ public sealed class RabidPlugin : IDalamudPlugin
     public Configuration Configuration { get; init; }
 
     public readonly WindowSystem WindowSystem = new("RabidPlugin");
-    public enum RabidWindow
-    {
-        Config,
-        Debug,
-        COUNT
-    };
-    public Window[] Windows;
+    public ConfigWindow RabidWindow;
 
     public SettingsManager SettingsManager { get; private set; }
 
@@ -38,20 +31,12 @@ public sealed class RabidPlugin : IDalamudPlugin
         PluginInterface.Create<Service>();
         Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
 
-        Windows = 
-        [
-            new ConfigWindow(this),
-            new DebugWindow(this),
-        ];
-        foreach (var window in Windows)
-        {
-            WindowSystem.AddWindow(window);
-        }
+        RabidWindow = new ConfigWindow(this);
+        WindowSystem.AddWindow(RabidWindow);
 
         m_Commands =
         [
-            new ("/rabid", new CommandInfo(OnMainCommand){ HelpMessage = "Debug Stuff:)" } ),
-            new ("/rabidsys", new CommandInfo(OnSettingsCommand){ HelpMessage = "Settings!" } ),
+            new ("/rabidconf", new CommandInfo(OnSettingsCommand){ HelpMessage = "Settings!" } ),
         ];
         foreach (var m in m_Commands)
         {
@@ -63,18 +48,12 @@ public sealed class RabidPlugin : IDalamudPlugin
 
         PluginInterface.UiBuilder.Draw += UIUpdate;
         PluginInterface.UiBuilder.OpenConfigUi += ToggleConfigUI;
-        PluginInterface.UiBuilder.OpenMainUi += ToggleDebugUI;
     }
 
     public void Dispose()
     {
         WindowSystem.RemoveAllWindows();
-
-        foreach (Window window in Windows)
-        {
-            IDisposable disp = (IDisposable)window;
-            disp.Dispose();
-        }
+        RabidWindow.Dispose();
 
         foreach (var command in m_Commands)
         {
@@ -88,8 +67,6 @@ public sealed class RabidPlugin : IDalamudPlugin
 
         DoFPFOVAdjustments();
     }
-
-    private void OnMainCommand(string command, string args) => ToggleDebugUI();
 
     private void OnSettingsCommand(string command, string args) => ToggleConfigUI();
 
@@ -120,6 +97,5 @@ public sealed class RabidPlugin : IDalamudPlugin
         }
     }
 
-    public void ToggleConfigUI() => Windows[(int)RabidWindow.Config].Toggle();
-    public void ToggleDebugUI() => Windows[(int)RabidWindow.Debug].Toggle();
+    public void ToggleConfigUI() => RabidWindow.Toggle();
 }

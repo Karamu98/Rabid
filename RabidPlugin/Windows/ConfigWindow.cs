@@ -2,10 +2,11 @@ using System;
 using System.Numerics;
 using Dalamud.Interface.Windowing;
 using ImGuiNET;
+using RabidPlugin.Extern;
 
 namespace RabidPlugin.Windows;
 
-public class ConfigWindow : Window, IDisposable
+public partial class ConfigWindow : Window, IDisposable
 {
     private RabidPlugin m_RabidPlugin;
     private Configuration m_Configuration;
@@ -13,11 +14,6 @@ public class ConfigWindow : Window, IDisposable
 
     public ConfigWindow(RabidPlugin plugin) : base("Rabid Config###With a constant ID")
     {
-        //Flags = ImGuiWindowFlags.AlwaysAutoResize;
-
-        //Size = new Vector2(550, 70);
-        //SizeCondition = ImGuiCond.FirstUseEver;
-
         m_RabidPlugin = plugin;
         m_Configuration = m_RabidPlugin.Configuration;
     }
@@ -28,26 +24,9 @@ public class ConfigWindow : Window, IDisposable
     {
         if (ImGui.BeginTabBar("ToolTabs", ImGuiTabBarFlags.NoCloseWithMiddleMouseButton | ImGuiTabBarFlags.Reorderable))
         {
-            //ImGui.Separator();
-            //ImGui.Spacing();
-
             if(ImGui.BeginTabItem("General"))
             {
-                if (ImGui.TreeNode("First person FOV adjustment"))
-                {
-                    ImGui.Checkbox("Enabled", ref m_Configuration.FirstPersonFOVAdjuster);
-                    ImGui.Checkbox("Toggle Auto-Face Target", ref m_Configuration.Toggle_AutoFaceTargetWhenUsingAction);
-                    if (ImGui.IsItemHovered())
-                    {
-                        ImGui.BeginTooltip();
-                        ImGui.Text("If \"Automatically face target when using action.\" is enabled, disable this setting when entering first person.\nAuto re-enable it when coming out of first person.");
-                        ImGui.EndTooltip();
-                    }
-                    ImGui.DragFloat("First person FOV Adjustment", ref m_Configuration.CameraFOV, 0.01f, 0.0f, 1.0f);
-                    ImGui.Unindent();
-
-                    ImGui.TreePop();
-                }
+                DrawFOVAdjustmentConfig();
                 ImGui.EndTabItem();
             }
 
@@ -57,7 +36,37 @@ public class ConfigWindow : Window, IDisposable
                 ImGui.EndTabItem();
             }
 
+            if(ImGui.BeginTabItem("Debug Tools"))
+            {
+                if(ImGui.CollapsingHeader("Camera"))
+                {
+                    DrawCameraDebug();
+                }
+
+                if(ImGui.CollapsingHeader("Settings Manager"))
+                {
+                    m_RabidPlugin.SettingsManager.DrawDebug();
+                }
+            }
+
             ImGui.EndTabBar();
+        }
+    }
+
+    private void DrawFOVAdjustmentConfig()
+    {
+        if (ImGui.CollapsingHeader("First person FOV adjustment"))
+        {
+            ImGui.Checkbox("Enabled", ref m_Configuration.FirstPersonFOVAdjuster);
+            ImGui.Checkbox("Toggle Auto-Face Target", ref m_Configuration.Toggle_AutoFaceTargetWhenUsingAction);
+            if (ImGui.IsItemHovered())
+            {
+                ImGui.BeginTooltip();
+                ImGui.Text("If \"Automatically face target when using action.\" is enabled, disable this setting when entering first person.\nAuto re-enable it when coming out of first person.");
+                ImGui.EndTooltip();
+            }
+            ImGui.DragFloat("First person FOV Adjustment", ref m_Configuration.CameraFOV, 0.01f, 0.0f, 1.0f);
+            ImGui.Unindent();
         }
     }
 }
